@@ -1,0 +1,44 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id          Int           @id @default(autoincrement())
+  nombre      String
+  usuario     String
+  password    String
+  UsuarioRuta UsuarioRuta[]
+}
+
+model UsuarioRuta {
+  id        Int     @id @default(autoincrement())
+  idUsuario Int
+  IdRuta    Int
+  usuario   Usuario @relation(fields: [idUsuario], references: [id])
+  ruta      Ruta    @relation(fields: [IdRuta], references: [id])
+}
+
+model Ruta {
+  id                Int           @id @default(autoincrement())
+  start             Float[]
+  middle            Float[]
+  end               Float[]
+  idTipoCaminata    Int
+  fechaCreacion     DateTime
+  FechaModificacion DateTime
+  linea             String?
+  tipoCaminata      TipoCaminata  @relation(fields: [idTipoCaminata], references: [id])
+  UsuarioRuta       UsuarioRuta[]
+}
+
+model TipoCaminata {
+  id     Int    @id @default(autoincrement())
+  nombre String
+
+  Ruta Ruta[]
+}
