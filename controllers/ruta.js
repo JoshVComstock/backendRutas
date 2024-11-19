@@ -113,7 +113,9 @@ app.get("/allRutas", async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: "Rutas obtenidas correctamente", rutas });
+    res
+      .status(200)
+      .json({ message: "Rutas obtenidas correctamente", data: rutas });
   } catch (error) {
     console.error("Error al obtener las rutas:", error);
     res.status(500).json({ error: "Error al obtener las rutas" });
