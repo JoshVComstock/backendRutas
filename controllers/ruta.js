@@ -103,48 +103,34 @@ app.post("/tipoCaminata", async (req, res) => {
   }
 });
 
-app.post("/usuarioRuta", async (req, res) => {
+app.get("/allRutas", async (req, res) => {
   try {
-    const { idUsuario, rutas } = req.body;
-    const usuario = await prisma.usuario.findUnique({
-      where: { id: idUsuario },
+    const rutas = await prisma.ruta.findMany({
+      select: {
+        start: true,
+        middle: true,
+        end: true,
+      },
     });
 
-    if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-
-    const rutasCreadas = await Promise.all(
-      rutas.map(async (ruta) => {
-        const nuevaRuta = await prisma.ruta.create({
-          data: {
-            start: ruta.start,
-            middle: ruta.middle,
-            end: ruta.end,
-            idTipoCaminata: ruta.IdTipoCaminata,
-            fechaCreacion: new Date(),
-            FechaModificacion: new Date(),
-          },
-        });
-
-        await prisma.usuarioRuta.create({
-          data: {
-            idUsuario: idUsuario,
-            IdRuta: nuevaRuta.id,
-          },
-        });
-
-        return nuevaRuta;
-      })
-    );
-
-    res
-      .status(201)
-      .json({ message: "Rutas creadas con éxito", rutas: rutasCreadas });
+    res.status(200).json({ message: "Rutas obtenidas correctamente", rutas });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al crear las rutas" });
+    console.error("Error al obtener las rutas:", error);
+    res.status(500).json({ error: "Error al obtener las rutas" });
   }
 });
-
+app.get("/usuario", async (req, res) => {
+  try {
+    const usuario = await prisma.usuario.findMany({});
+    res.json({
+      data: usuario,
+      message: "usuarios obtenidos correctamente",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al obtener usuario",
+      error: error.message,
+    });
+  }
+});
 export default app;
