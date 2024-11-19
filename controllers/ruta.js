@@ -121,6 +121,43 @@ app.get("/allRutas", async (req, res) => {
     res.status(500).json({ error: "Error al obtener las rutas" });
   }
 });
+app.get("/tipoCaminata/:id/rutas", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const tipoCaminata = await prisma.tipoCaminata.findUnique({
+      where: {
+        id: parseInt(id, 10),
+      },
+      include: {
+        Ruta: {
+          select: {
+            id: true,
+            start: true,
+            middle: true,
+            end: true,
+            linea: true,
+          },
+        },
+      },
+    });
+
+    if (!tipoCaminata) {
+      return res.status(404).json({ message: "TipoCaminata no encontrado" });
+    }
+
+    res.status(200).json({
+      message: "Rutas obtenidas correctamente",
+      data: tipoCaminata.Ruta,
+    });
+  } catch (error) {
+    console.error("Error al obtener las rutas del TipoCaminata:", error);
+    res
+      .status(500)
+      .json({ error: "Error al obtener las rutas del TipoCaminata" });
+  }
+});
+
 app.get("/usuario", async (req, res) => {
   try {
     const usuario = await prisma.usuario.findMany({});
