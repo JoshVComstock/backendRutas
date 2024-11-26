@@ -102,7 +102,6 @@ app.post("/tipoCaminata", async (req, res) => {
     });
   }
 });
-
 app.get("/allRutas", async (req, res) => {
   try {
     const rutas = await prisma.ruta.findMany({

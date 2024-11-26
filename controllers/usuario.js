@@ -17,7 +17,6 @@ app.get("/usuario", async (req, res) => {
     });
   }
 });
-
 app.post("/usuario", async (req, res) => {
   try {
     const usuario = await prisma.usuario.create({
@@ -146,6 +145,81 @@ app.post("/login", async (req, res) => {
     res.json({
       message: "Inicio de sesión correcto",
       data: response,
+    });
+  }
+});
+app.post("/usuarioRuta", async (req, res) => {
+  const { idUsuario, rutas } = req.body;
+
+  if (!idUsuario || !Array.isArray(rutas) || rutas.length === 0) {
+    return res.status(400).json({
+      message: "Faltan datos requeridos o el formato no es válido.",
+    });
+  }
+
+  try {
+    // Verificar si el usuario existe
+    const usuarioExistente = await prisma.usuario.findUnique({
+      where: { id: idUsuario },
+    });
+
+    if (!usuarioExistente) {
+      return res.status(400).json({
+        message: `El usuario con id ${idUsuario} no existe.`,
+      });
+    }
+
+    // Crear rutas
+    const rutasCreadaIds = await Promise.all(
+      rutas.map(async (ruta) => {
+        const {
+          start,
+          middle,
+          end,
+          IdTipoCaminata, // Ajustado para que coincida con los datos enviados
+          linea = null,
+        } = ruta;
+
+        if (!start || !middle || !end || !IdTipoCaminata) {
+          throw new Error("Datos incompletos en una de las rutas.");
+        }
+
+        const nuevaRuta = await prisma.ruta.create({
+          data: {
+            start,
+            middle,
+            end,
+            idTipoCaminata: IdTipoCaminata,
+            linea,
+            fechaCreacion: new Date(),
+            FechaModificacion: new Date(),
+          },
+        });
+
+        return nuevaRuta.id; // Retornar el ID de la ruta creada
+      })
+    );
+
+    // Crear relaciones UsuarioRuta
+    await Promise.all(
+      rutasCreadaIds.map(async (idRuta) => {
+        await prisma.usuarioRuta.create({
+          data: {
+            idUsuario,
+            IdRuta: idRuta,
+          },
+        });
+      })
+    );
+
+    return res.status(201).json({
+      message: "Rutas y relaciones guardadas correctamente.",
+    });
+  } catch (error) {
+    console.error("Error al guardar rutas:", error);
+    return res.status(500).json({
+      message: "Ocurrió un error al guardar las rutas.",
+      error: error.message,
     });
   }
 });
